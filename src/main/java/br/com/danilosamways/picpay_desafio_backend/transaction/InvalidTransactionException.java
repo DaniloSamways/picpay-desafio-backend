@@ -1,4 +1,4 @@
-package br.com.danilosamways.exception;
+package br.com.danilosamways.picpay_desafio_backend.transaction;
 
 public class InvalidTransactionException extends RuntimeException {
     public InvalidTransactionException(String message) {

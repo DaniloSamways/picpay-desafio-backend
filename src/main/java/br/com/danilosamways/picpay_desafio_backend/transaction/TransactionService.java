@@ -1,9 +1,12 @@
 package br.com.danilosamways.picpay_desafio_backend.transaction;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.danilosamways.picpay_desafio_backend.authorization.AuthorizerService;
+import br.com.danilosamways.picpay_desafio_backend.notification.NotificationService;
 import br.com.danilosamways.picpay_desafio_backend.wallet.Wallet;
 import br.com.danilosamways.picpay_desafio_backend.wallet.WalletRepository;
 import br.com.danilosamways.picpay_desafio_backend.wallet.WalletType;
@@ -13,14 +16,17 @@ public class TransactionService {
     private final TransactionRepository transactionRepository;
     private final WalletRepository walletRepository;
     private final AuthorizerService authorizerService;
+    private final NotificationService notificationService;
 
     public TransactionService(
             TransactionRepository transactionRepository,
             WalletRepository walletRepository,
-            AuthorizerService authorizerService) {
+            AuthorizerService authorizerService,
+            NotificationService notificationService) {
         this.transactionRepository = transactionRepository;
         this.walletRepository = walletRepository;
         this.authorizerService = authorizerService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -38,7 +44,10 @@ public class TransactionService {
         walletRepository.save(payeeWallet.credit(transaction.value()));
 
         // 4 - Chamar serviços externos
-        authorizerService.authorize(transaction);
+        // Autorizar transação
+        authorizerService.authorize(newTransaction);
+        // Noticação
+        notificationService.notify(newTransaction);
 
         return newTransaction;
     }
@@ -63,5 +72,9 @@ public class TransactionService {
         return payer.type() == WalletType.COMUM.getValue() &&
                 payer.balance().compareTo(transaction.value()) >= 0 &&
                 !transaction.payer().equals(transaction.payee());
+    }
+
+    public List<Transaction> list() {
+        return transactionRepository.findAll();
     }
 }

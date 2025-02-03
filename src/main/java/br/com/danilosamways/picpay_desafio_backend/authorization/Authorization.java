@@ -9,6 +9,6 @@ public record Authorization(
     }
 
     public boolean isAuthorized() {
-        return data.authorization;
+        return data().authorization();
     }
 }
